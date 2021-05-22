@@ -1,63 +1,80 @@
 #include <stdio.h>
-#include <malloc.h>
-#include <ctype.h>
+#include <errno.h>
+#include <locale.h>
+#include <stdlib.h>
+
+void inputPerson(struct person* person, struct person* pMaxim, int n, int i, FILE* in);
+void inputPersons(struct person** persons, struct person** pMaxim, int n, FILE* in);
+void output(struct person* person, int n);
+void outputPersons(struct person* persons, int n);
+void personFree(struct person* persons, int n);
+
+struct person {
+	unsigned int age;
+	char* name;
+};
 
 int main() {
-	int sletter = 0, bletter = 0, count = 0, digit = 0, k = 0;
-	while (1) {
-		printf("enter password (max 20 symbols):\n");
-		char* mass = (char*)malloc(20 * sizeof(char));
-		for (int i = 0; i < 20; i++) {
-			mass[i] = getch();
-			if (mass[i] == '\b') {
-				if (i != 0) {
-					if (i < 20) {
-						printf("\b \b");
-						i -= 2;
-						continue;
-					}
-					else break;
-				}
-			}
-			if (mass[i] != '\b') {
-				if (mass[i] == 13) break;
-				printf("*");
-				++count;
-			}
-			if (k == 0) {
-				for (int p = 0; p < 4; ++p) {
-					if ((mass[i] > 96) && (mass[i] < 123)) {
-						++sletter;
-						bletter = 0;
-						digit = 0;
-					}
-					if ((mass[i] > 64) && (mass[i] < 91)) {
-						++bletter;
-						sletter = 0;
-						digit = 0;
-					}
-					if (isdigit(mass[i])) {
-						++digit;
-						sletter = 0;
-						bletter = 0;
-					}
-					if ((sletter == 4) || (bletter == 4) || (digit == 4)) {
-						++k;
-					}
-					break;
-				}
-			}
-		}
-		if (k == 1) {
-			printf("\nbad password :( try again!\n");
-			count = 0;
-			k = 0;
-		}
-		else if ((k == 0) && (count >= 15)) {
-			printf("\nok! good password\n");
-			count = 0;
-		}
-		free(mass);
+	setlocale(LC_ALL, "Rus");
+	int n;
+	struct person* p;
+	struct person* pMax;
+	FILE* in;
+	int err = (fopen_s(&in, "persons.txt", "r+"));
+	if (err != 0) {
+		printf("Can't open file %s", "persons.txt");
+		printf(" Value of errno: %d\n ", errno);
+		exit(-1);
 	}
+	else {
+		fscanf_s(in, "%d", &n);
+		printf("inputting persons...\n");
+		inputPersons(&p, &pMax, n, in);
+		outputPersons(p, n);
+		printf("\nThe most dinosaur: %u %s\n", pMax->age, pMax->name);
+		personFree(p, n);
+		personFree(pMax, n);
+	}
+	fclose(in);
+	system("pause");
 	return 0;
+}
+
+void inputPerson(struct person* person, struct person* pMaxim, int n, int i, FILE* in) {
+	fscanf_s(in, "%u ", &(person->age));
+
+	person->name = (char*)malloc(sizeof(char));
+	fgets(person->name, 20, in);
+	if (i == 0) {
+		pMaxim->age = person->age;
+		pMaxim->name = person->name;
+	}
+	if ((person->age) > (pMaxim->age)) {
+		pMaxim->age = person->age;
+		pMaxim->name = person->name;
+	}
+
+}
+
+void inputPersons(struct person** persons, struct person** pMaxim, int n, FILE* in) {
+	*persons = (struct person*)malloc(n * sizeof(struct person));
+	*pMaxim = (struct person*)malloc(n * sizeof(struct person));
+	for (int i = 0; i < n; ++i) {
+		inputPerson((*persons + i), *pMaxim, n, i, in);
+	}
+}
+
+void output(struct person* person, int n) {
+
+	printf("%u %s\n", person->age, person->name);
+}
+
+void outputPersons(struct person* persons, int n) {
+	for (int i = 0; i < n; ++i) {
+		output(&persons[i], n);
+	}
+}
+
+void personFree(struct person* persons, int n) {
+	free(persons);
 }
