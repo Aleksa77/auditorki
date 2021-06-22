@@ -1,0 +1,7 @@
+....txt
+.vs/
+*.vcxproj
+*.vcxproj.filters
+*.user
+Debug/
+x64/
